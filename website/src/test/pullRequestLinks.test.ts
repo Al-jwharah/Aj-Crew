@@ -1041,7 +1041,7 @@ describe('CJK / fullwidth punctuation after a PR URL (issue #507)', () => {
       `PR \u5DF2\u5F00：${gh}（\u5355 commit，Fixes #435），`
       + `CI \u5168\u7EFF，approve \u540E merge。`
     expect(extractPullRequestLinks(messages(content))).toEqual([
-      { url: gh, provider: 'github', number: 436, repo: 'AjCrew', kind: 'change' },
+      { url: gh, provider: 'github', number: 436, repo: 'KiroCrew', kind: 'change' },
     ])
   })
 })
