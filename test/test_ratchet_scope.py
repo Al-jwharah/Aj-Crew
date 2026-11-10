@@ -925,6 +925,30 @@ class TestChangeFilesAndShowAt:
         assert (None, "e.txt") in pairs
         assert (None, "untracked.txt") in pairs
 
+    def test_a_move_larger_than_gits_rename_limit_is_still_paired(self, repo: _RepoHelper) -> None:
+        # Past its rename limit git drops inexact rename detection and reports each
+        # moved file as a deletion plus a new file. 1001 sources against 1001
+        # destinations is one pair over the default limit (1000 x 1000); a new
+        # basename and an edited line keep git's cheaper exact and basename pairing
+        # out of it, so every pair below comes from the unlimited search.
+        count = 1001
+        (repo / "old").mkdir()
+        for index in range(count):
+            body = "".join(f"file {index} line {line}\n" for line in range(8))
+            (repo / "old" / f"f{index}.txt").write_text(body, encoding="utf-8")
+        repo.git("add", "-A")
+        repo.git("commit", "-q", "-m", "a directory")
+        repo.git("branch", "-f", "main")
+        (repo / "new").mkdir()
+        for index in range(count):
+            moved = (repo / "old" / f"f{index}.txt").rename(repo / "new" / f"g{index}.txt")
+            with moved.open("a", encoding="utf-8") as handle:
+                handle.write("edited\n")
+        repo.git("add", "-A")
+        pairs = scope.change_files(self._base(repo), cwd=repo.root)
+        assert len(pairs) == count
+        assert set(pairs) == {(f"old/f{index}.txt", f"new/g{index}.txt") for index in range(count)}
+
     def test_show_at_reads_bytes_at_the_base_and_returns_none_for_absent(
         self, repo: _RepoHelper
     ) -> None:

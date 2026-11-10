@@ -533,11 +533,20 @@ def change_files(
 
     The counterpart of :func:`changed_paths_at` for a change-shaped
     comparison: a new file has no base path, a deleted one no current path,
-    git's rename detection pairs the two, and a copy (``--find-copies``) is
-    reported as a new file. Untracked files are included so a run before a
-    commit sees what the commit will hold.
+    git's rename detection pairs the two, and a copy is reported as a new
+    file. Untracked files are included so a run before a commit sees what the
+    commit will hold.
+
+    ``-l0`` lifts git's rename limit. Past it git drops inexact rename
+    detection with a warning on stderr and reports each moved file as a
+    deletion plus a new file, so a change that moves a directory would have
+    every file in it start from nothing. Copy detection (``-C``) is not asked
+    for: it adds every modified file as a candidate source and turns off git's
+    pairing by basename, which is what made a tree-wide move reach the limit,
+    and a copy is a new file here either way (``C`` is still read as one, for a
+    checkout whose ``diff.renames`` is ``copies``).
     """
-    code, out = _git_result("diff", "--name-status", "-M", "-C", "-z", base, "--", cwd=cwd)
+    code, out = _git_result("diff", "--name-status", "-M", "-l0", "-z", base, "--", cwd=cwd)
     if code != 0:
         raise RuntimeError(f"git diff against {base} failed")
     fields = out.split("\0")
