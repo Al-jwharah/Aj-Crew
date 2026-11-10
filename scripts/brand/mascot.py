@@ -361,6 +361,119 @@ def boxed_figure(
 
 
 # --------------------------------------------------------------------------- #
+# the desktop companion's body
+# --------------------------------------------------------------------------- #
+
+# The companion draws its eyes, its dress-up props and its reactions as live
+# layers placed in percentages of a square box, so its body is a single eyeless
+# silhouette that has to keep the box it has always had (a 421 x 512 figure
+# padded by 70 on every side). The eyes park as high as y = 70 while the
+# companion ponders and glance as far out as x = 115 and x = 385, so the crown
+# is a low step that keeps the girdle above all of that and the pavilion is one
+# long face.
+CROWNS["low"] = {"top": [(-0.66, -0.35), (0.66, -0.35)], "feet": (-0.5, 0.5)}
+PAVILIONS["companion"] = [(1.0, 0.96), (0.68, 1.7), (0.0, 2.12), (-0.68, 1.7), (-1.0, 0.96)]
+COMPANION_BOX = (-70.0, -70.0, 560.977, 652.0)
+COMPANION_BODY = Pose(crown="low", pavilion="companion", cx=210.49, cy=24.0, half=212.0)
+
+
+def companion_body_svg(stroke: float = 18.0) -> str:
+    """One eyeless path, white on a black outline: the art the recolour tool reads."""
+    fig = figure(COMPANION_BODY, gap=0.07, radius=0.13, digits=1)
+    x, y, w, h = COMPANION_BOX
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x:g} {y:g} {w:g} {h:.1f}" '
+        'width="200" height="232">\n'
+        f'<path d="{fig.body}" fill="#FFFFFF" stroke="#000000" stroke-width="{stroke:g}" '
+        'stroke-linejoin="round" paint-order="stroke"/>\n'
+        "</svg>\n"
+    )
+
+
+# The app catalogue shows the companion twice: in its listing's banner (480 x
+# 270, the figure standing left of centre inside the breathing rings) and as a
+# 24 px line icon. Both are the body above with the eyes of its resting pose.
+COMPANION_REST_EYES = ((243.0, 187.0), (342.0, 187.0))
+COMPANION_BANNER_SPOT = (150.0, 142.0, 0.262)  # centre x, centre y, scale
+
+
+def companion_banner_group(ink: str = "#0B0C0F", stroke: float = 18.0) -> str:
+    """The ``<g>`` a catalogue banner carries between its companion markers."""
+    fig = figure(COMPANION_BODY, gap=0.07, radius=0.13, digits=1)
+    cx, cy, scale = COMPANION_BANNER_SPOT
+    eyes = "".join(
+        f'    <ellipse cx="{x:g}" cy="{y:g}" rx="21" ry="29" fill="{ink}"/>\n'
+        for x, y in COMPANION_REST_EYES
+    )
+    return (
+        f'  <g transform="translate({cx:g},{cy:g}) scale({scale:g}) translate(-210.5,-211)">\n'
+        f'    <path d="{fig.body}" fill="#FFFFFF" stroke="{ink}" stroke-width="{stroke:g}" '
+        'stroke-linejoin="round" paint-order="stroke"/>\n'
+        f"{eyes}"
+        "  </g>\n"
+    )
+
+
+def companion_icon() -> str:
+    """The companion on the catalogue's 24 px icon grid, in the listing's two tints."""
+    a, b = "var(--ico-a, currentColor)", "var(--ico-b, currentColor)"
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">\n'
+        "  <!-- The companion gem: a low crown over one long face, with its eyes -->\n"
+        '  <path d="M4.5 8.5L7 4.5H17L19.5 8.5V13L17.25 18L12 21.25L6.75 18L4.5 13Z"\n'
+        f'        fill="{a}" fill-opacity="0.22"\n'
+        f'        stroke="{a}" stroke-width="1.8" stroke-linejoin="round"/>\n'
+        f'  <path d="M4.5 8.5H19.5" stroke="{a}" stroke-width="1.8" stroke-linecap="round"/>\n'
+        f'  <circle cx="10" cy="12.9" r="1.35" fill="{b}"/>\n'
+        f'  <circle cx="14.4" cy="12.9" r="1.35" fill="{b}"/>\n'
+        "</svg>\n"
+    )
+
+
+# --------------------------------------------------------------------------- #
+# the gem on a pixel grid
+# --------------------------------------------------------------------------- #
+
+# The canvas scenes draw the character from a 24 x 28 bitmap and add the eyes,
+# glasses, hats and capes on top at fixed cells: eyes on rows 7-11 right of
+# centre, hats from row -1 up over columns 6-22. So this is the same cut as the
+# companion's body, placed by hand on that grid: a low crown of three facets
+# (the table narrowing downward between two triangles), the girdle as one empty
+# row, and a long pavilion that stays full width past the eyes and the blush
+# before it comes to its point.
+PIXEL_GEM = [
+    "......############......",
+    "...#..############..#...",
+    "..###..##########..###..",
+    ".#####..########..#####.",
+    "........................",
+    ".######################.",
+    "########################",
+    "########################",
+    "########################",
+    "########################",
+    "########################",
+    "########################",
+    "########################",
+    "########################",
+    "########################",
+    "########################",
+    "########################",
+    ".######################.",
+    "..####################..",
+    "...##################...",
+    "....################....",
+    ".....##############.....",
+    "......############......",
+    ".......##########.......",
+    "........########........",
+    ".........######.........",
+    "..........####..........",
+    "...........##...........",
+]
+
+
+# --------------------------------------------------------------------------- #
 # nav glyphs: drawn on Lucide's own grid (24 x 24, 2 px round stroke) so they
 # weigh the same as the icons they sit beside
 # --------------------------------------------------------------------------- #

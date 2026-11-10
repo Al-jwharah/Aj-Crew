@@ -26,6 +26,7 @@ from pathlib import Path
 
 import mark
 import mascot
+import petclips
 from PIL import Image
 from textpath import text_path
 
@@ -182,6 +183,10 @@ def write_mascot(root: Path, r: "Renderer") -> Path:
             mascot.crew_pose_svg(pose), encoding="utf-8"
         )
 
+    # the desktop companion's eyeless body; its eyes and props are live layers
+    companion = root / "website" / "src" / "apps" / "crew-companion" / "assets"
+    (companion / "kiro_idle.svg").write_text(mascot.companion_body_svg(), encoding="utf-8")
+
     onboarding = assets / "onboarding"
     guide = mascot.Pose(crown="table", pavilion="shield", tilt=-8, look=0.6)
     (onboarding / "aj-gem-var1.svg").write_text(
@@ -195,7 +200,48 @@ def write_mascot(root: Path, r: "Renderer") -> Path:
     )
 
     write_splash_gem(root)
+    write_pixel_gem(root)
+    write_pet_clips(root)
+    write_companion_listing(root)
     return r.add(mascot.file_chomper_svg(), 512, 356)
+
+
+def write_pixel_gem(root: Path):
+    """Rewrite the bitmap the canvas scenes draw (``KIRO_GHOST_PIXELS`` in sceneText.ts)."""
+    rows = mascot.PIXEL_GEM
+    if len(rows) != 28 or any(len(row) != 24 for row in rows):
+        raise SystemExit("the pixel gem must stay 24 x 28: the scenes place its face by cell")
+    page = root / "website" / "src" / "hooks" / "sceneText.ts"
+    text = page.read_text(encoding="utf-8")
+    start = text.index("[", text.index("export const KIRO_GHOST_PIXELS ="))
+    end = text.index("]", start)
+    block = "[\n" + "".join(f"  '{row}',\n" for row in rows)
+    page.write_text(text[:start] + block + text[end:], encoding="utf-8")
+
+
+def write_companion_listing(root: Path):
+    """The companion in the app catalogue: its icon, and the figure in both banners.
+
+    The banners are hand-drawn scenes; only the block between the two
+    ``companion`` comments is the kit's.
+    """
+    folder = root / "website" / "public" / "app-assets" / "crew-companion"
+    (folder / "icon.svg").write_text(mascot.companion_icon(), encoding="utf-8")
+    opening, closing = "  <!-- companion: scripts/brand -->\n", "  <!-- /companion -->\n"
+    for name in ("hero-dark.svg", "hero-light.svg"):
+        text = (folder / name).read_text(encoding="utf-8")
+        start = text.index(opening) + len(opening)
+        end = text.index(closing, start)
+        (folder / name).write_text(
+            text[:start] + mascot.companion_banner_group() + text[end:], encoding="utf-8"
+        )
+
+
+def write_pet_clips(root: Path):
+    """The desktop pet's gem pack: four Lottie clips (the file names predate the gem)."""
+    folder = root / "website" / "src" / "apps" / "mochi" / "assets" / "animations"
+    for stem, text in petclips.clips().items():
+        (folder / f"{stem}.json").write_text(text, encoding="utf-8")
 
 
 def write_splash_gem(root: Path):
