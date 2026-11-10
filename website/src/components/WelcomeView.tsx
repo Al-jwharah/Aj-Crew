@@ -75,7 +75,11 @@ export function welcomeGreetings(): string[] {
   return [...new Set(keys)].map(k => i18nT(k))
 }
 
-function SuggestedCards({ setInput, tryTodayCount = 0 }: { setInput: (v: string) => void; tryTodayCount?: number }) {
+/**
+ * The suggested tasks to offer on an empty chat: the server's personal set, or
+ * the curated built-in set when it has none (or failed, reported by `isError`).
+ */
+export function useWelcomeSuggestions(): { suggestions: Suggestion[]; isError: boolean; error: unknown } {
   const { data, isError, error } = useQuery({
     queryKey: ['suggestions'],
     queryFn: () => api.suggestions(),
@@ -97,7 +101,11 @@ function SuggestedCards({ setInput, tryTodayCount = 0 }: { setInput: (v: string)
   // Filter first, then fall back: a payload whose every item is malformed would
   // otherwise leave the grid blank while a curated set exists for exactly that.
   const served = (data?.suggestions ?? []).map(normalizeSuggestion).filter(s => s.text !== '')
-  const all = served.length ? served : fallbackSuggestions
+  return { suggestions: served.length ? served : fallbackSuggestions, isError, error }
+}
+
+function SuggestedCards({ setInput, tryTodayCount = 0 }: { setInput: (v: string) => void; tryTodayCount?: number }) {
+  const { suggestions: all, isError, error } = useWelcomeSuggestions()
   // Only the LAST card gives way to the Try today entry; the personal
   // suggestions before it stay exactly as they are.
   const cards: Array<Suggestion & { entry?: true }> = tryTodayCount > 0
@@ -169,24 +177,34 @@ function SuggestedCards({ setInput, tryTodayCount = 0 }: { setInput: (v: string)
   )
 }
 
-export default function WelcomeView({ setInput }: WelcomeViewProps) {
-  // One greeting per mount: the KEY is fixed here so a re-render never reshuffles,
-  // while i18nT below still re-resolves it on a language switch.
+/** One greeting per mount: the KEY is fixed so a re-render never reshuffles,
+ *  while the caller's i18nT still re-resolves it on a language switch. */
+export function useWelcomeGreetingKey(): string {
   const [greetingKey] = useState(() => {
     const keys = welcomeGreetingKeys()
     return keys[Math.floor(Math.random() * keys.length)] ?? keys[0]
   })
+  return greetingKey
+}
 
-  // Per-theme brand mark, resolved in the shell's order: compiled edition
-  // branding (the themeBranding seam) first, then the installed pack's own
-  // welcome image, then its left-rail logo, then the stock AjGem (what the
-  // standalone build shows on its built-in themes). An animated image holds its
-  // first frame under reduced motion, like the pack's loader art.
+/**
+ * Per-theme brand mark, resolved in the shell's order: compiled edition
+ * branding (the themeBranding seam) first, then the installed pack's own
+ * welcome image, then its left-rail logo, then the stock AjGem (what the
+ * standalone build shows on its built-in themes). An animated image holds its
+ * first frame under reduced motion, like the pack's loader art.
+ */
+export function WelcomeBrandMark({ className }: { className: string }) {
   const { colorTheme, brandWelcome, brandLogo } = useTheme()
   const heroImage = getThemeBranding(colorTheme)?.logo ?? brandWelcome ?? brandLogo
-  const brandMark = heroImage
-    ? <PackLoaderImage src={heroImage} className="w-12 h-12 drop-shadow-lg shrink-0 animate-float rounded-md object-contain" />
-    : <AjGem size={48} className="drop-shadow-lg shrink-0 animate-float" />
+  return heroImage
+    ? <PackLoaderImage src={heroImage} className={`w-12 h-12 shrink-0 rounded-md object-contain ${className}`} />
+    : <AjGem size={48} className={`shrink-0 ${className}`} />
+}
+
+export default function WelcomeView({ setInput }: WelcomeViewProps) {
+  const greetingKey = useWelcomeGreetingKey()
+  const brandMark = <WelcomeBrandMark className="drop-shadow-lg animate-float" />
 
   // Explore's "Try today" (RFC 4.5): while any feature is untried, the last
   // suggestion card becomes one entry card that opens Explore. Only while the
